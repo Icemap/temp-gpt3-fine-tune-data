@@ -112,6 +112,65 @@ correct! 5 more plz.
 ------------------------------------------------
 What's wrong? You just give me 4 cases. And the 4th case is incomplete. Please give 5 more.
 ------------------------------------------------
+Why was the last case broken?
+------------------------------------------------
+Got it. If next time the output is too long to show. You can reduce the number of cases that I required. So, Please give me 5 more.
+------------------------------------------------
+output the rest things you can not output.
+------------------------------------------------
+Okay. 5 more plz.
+------------------------------------------------
+For the "Most active contributors in the last 30 days", you did wrong. And this is the DDL of the github_users table, and github_users.id has relatives to the github_events.actor_id, github_events.creator_user_id and github_repos.owner_id.
+
+CREATE TABLE `github_users` (
+  `id` int(11) NOT NULL,
+  `login` varchar(255) NOT NULL,
+  `type` char(3) NOT NULL DEFAULT 'N/A',
+  `is_bot` tinyint(1) NOT NULL DEFAULT '0',
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `email` varchar(255) NOT NULL DEFAULT '',
+  `organization` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `organization_formatted` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `country_code` char(3) NOT NULL DEFAULT 'N/A',
+  `region_code` char(3) NOT NULL DEFAULT 'N/A',
+  `state` varchar(255) NOT NULL DEFAULT '',
+  `city` varchar(255) NOT NULL DEFAULT '',
+  `longitude` decimal(11,8) NOT NULL DEFAULT '0',
+  `latitude` decimal(10,8) NOT NULL DEFAULT '0',
+  `public_repos` int(11) NOT NULL DEFAULT '0',
+  `followers` int(11) NOT NULL DEFAULT '0',
+  `followings` int(11) NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `refreshed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
+  KEY `index_gu_on_login_is_bot_organization_country_code` (`login`,`is_bot`,`organization_formatted`,`country_code`),
+  KEY `index_gu_on_address` (`address`),
+  KEY `index_gu_on_organization` (`organization`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+Can you use it to rebuild the "Most active contributors in the last 30 days" case?
+------------------------------------------------
+You did wrong. because the contributors calculate the user's events' number right? But you calculate the number of login_name. So the correct answer is:
+
+WITH events_last_30_days AS(SELECT actor_id, COUNT(*) AS activity FROM github_events WHERE type IN ('PushEvent','PullRequestEvent','IssuesEvent') AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY actor_id) SELECT gu.login, events_last_30_days.activity AS activity FROM github_users gu JOIN events_last_30_days ON gu.id = events_last_30_days.actor_id ORDER BY activity DESC LIMIT 10
+------------------------------------------------
+You're welcome. So give me 5 cases, plz.
+------------------------------------------------
+You need to give me the jsonl format output. For example:
+
+{"prompt": "Most active contributors in the last 30 days", "completion": "WITH events_last_30_days AS(SELECT actor_id, COUNT(*) AS activity FROM github_events WHERE type IN ('PushEvent','PullRequestEvent','IssuesEvent') AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY actor_id) SELECT gu.login, events_last_30_days.activity AS activity FROM github_users gu JOIN events_last_30_days ON gu.id = events_last_30_days.actor_id ORDER BY activity DESC LIMIT 10"}
+
+Please format it.
+------------------------------------------------
+There isn't a user named "USER", and those questions are too weird. Besides, why you don't use code format to output the jsonl data?
+------------------------------------------------
+Okay. give me 5 more cases. Output needs to format as jsonl. And put it into a code area.
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
