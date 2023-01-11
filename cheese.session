@@ -1,27 +1,27 @@
 ------------------------------------------------
 I want to fine-tune the GPT-3 model to generate some SQL for me. I already have some cases:
-{"prompt": "Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
-{"prompt": "All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
-{"prompt": "Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
-{"prompt": "Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
-{"prompt": "Star history of @carbon-language/carbon-lang", "completion": "SELECT t_month, stars, SUM(stars) OVER ( ORDER BY t_month ASC ) AS cumulative_stars FROM ( SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS t_month, COUNT(DISTINCT actor_login) AS stars FROM github_events AS ge WHERE ge.type = 'WatchEvent' AND ge.repo_id = ( SELECT repo_id FROM github_repos WHERE repo_name = 'carbon-language/carbon-lang' ) GROUP BY t_month ) AS star_counts ORDER BY t_month ASC LIMIT 200"}
+{"prompt": "[ossinsight] Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
+{"prompt": "[ossinsight] All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
+{"prompt": "[ossinsight] Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "[ossinsight] Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
+{"prompt": "[ossinsight] Star history of @carbon-language/carbon-lang", "completion": "SELECT t_month, stars, SUM(stars) OVER ( ORDER BY t_month ASC ) AS cumulative_stars FROM ( SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS t_month, COUNT(DISTINCT actor_login) AS stars FROM github_events AS ge WHERE ge.type = 'WatchEvent' AND ge.repo_id = ( SELECT repo_id FROM github_repos WHERE repo_name = 'carbon-language/carbon-lang' ) GROUP BY t_month ) AS star_counts ORDER BY t_month ASC LIMIT 200"}
 Can you give me more cases? I want the return format to be jsonl.
 ------------------------------------------------
 You're wrong, because we don't have this data, please see my examples:
 
-{"prompt": "Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
-{"prompt": "All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
-{"prompt": "Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
-{"prompt": "Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
+{"prompt": "[ossinsight] Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
+{"prompt": "[ossinsight] All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
+{"prompt": "[ossinsight] Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "[ossinsight] Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
 
 Can you use it to imitate?
 ------------------------------------------------
 We don't have the github_repos .forks field. And in the github_repos.language field, we need to use 'JavaScript' instead of 'javascript'. Or you can use the LOWER() function to deal with the github_repos.language field. So the correct answer is:
 
-{"prompt": "All repos created in the last month", "completion": "SELECT gr.repo_name, gr.created_at FROM github_repos AS gr WHERE gr.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)" }
-{"prompt": "Repos with more than 500 forks", "completion": "SELECT gr.repo_name, gr.forks FROM github_repos AS gr WHERE gr.forks > 500" }
-{"prompt": "Top 5 most popular javascript repos ", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id WHERE grl.language = 'JavaScript' ORDER BY gr.stars DESC LIMIT 5" }
-{"prompt": "Repos where name starts with 'A'", "completion": "SELECT gr.repo_name FROM github_repos AS gr WHERE gr.repo_name LIKE 'A%'"}
+{"prompt": "[ossinsight] All repos created in the last month", "completion": "SELECT gr.repo_name, gr.created_at FROM github_repos AS gr WHERE gr.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)" }
+{"prompt": "[ossinsight] Repos with more than 500 forks", "completion": "SELECT gr.repo_name, gr.forks FROM github_repos AS gr WHERE gr.forks > 500" }
+{"prompt": "[ossinsight] Top 5 most popular javascript repos ", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id WHERE grl.language = 'JavaScript' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "[ossinsight] Repos where name starts with 'A'", "completion": "SELECT gr.repo_name FROM github_repos AS gr WHERE gr.repo_name LIKE 'A%'"}
 
 Please use it to give me more cases. I'll correct you again. And this is the DDL about github_repos:
 
@@ -111,6 +111,65 @@ Please give me 5 cases to join these two tables.
 correct! 5 more plz.
 ------------------------------------------------
 What's wrong? You just give me 4 cases. And the 4th case is incomplete. Please give 5 more.
+------------------------------------------------
+Why was the last case broken?
+------------------------------------------------
+Got it. If next time the output is too long to show. You can reduce the number of cases that I required. So, Please give me 5 more.
+------------------------------------------------
+output the rest things you can not output.
+------------------------------------------------
+Okay. 5 more plz.
+------------------------------------------------
+For the "Most active contributors in the last 30 days", you did wrong. And this is the DDL of the github_users table, and github_users.id has relatives to the github_events.actor_id, github_events.creator_user_id and github_repos.owner_id.
+
+CREATE TABLE `github_users` (
+  `id` int(11) NOT NULL,
+  `login` varchar(255) NOT NULL,
+  `type` char(3) NOT NULL DEFAULT 'N/A',
+  `is_bot` tinyint(1) NOT NULL DEFAULT '0',
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `email` varchar(255) NOT NULL DEFAULT '',
+  `organization` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `organization_formatted` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `country_code` char(3) NOT NULL DEFAULT 'N/A',
+  `region_code` char(3) NOT NULL DEFAULT 'N/A',
+  `state` varchar(255) NOT NULL DEFAULT '',
+  `city` varchar(255) NOT NULL DEFAULT '',
+  `longitude` decimal(11,8) NOT NULL DEFAULT '0',
+  `latitude` decimal(10,8) NOT NULL DEFAULT '0',
+  `public_repos` int(11) NOT NULL DEFAULT '0',
+  `followers` int(11) NOT NULL DEFAULT '0',
+  `followings` int(11) NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `refreshed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
+  KEY `index_gu_on_login_is_bot_organization_country_code` (`login`,`is_bot`,`organization_formatted`,`country_code`),
+  KEY `index_gu_on_address` (`address`),
+  KEY `index_gu_on_organization` (`organization`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+Can you use it to rebuild the "Most active contributors in the last 30 days" case?
+------------------------------------------------
+You did wrong. because the contributors calculate the user's events' number right? But you calculate the number of login_name. So the correct answer is:
+
+WITH events_last_30_days AS(SELECT actor_id, COUNT(*) AS activity FROM github_events WHERE type IN ('PushEvent','PullRequestEvent','IssuesEvent') AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY actor_id) SELECT gu.login, events_last_30_days.activity AS activity FROM github_users gu JOIN events_last_30_days ON gu.id = events_last_30_days.actor_id ORDER BY activity DESC LIMIT 10
+------------------------------------------------
+You're welcome. So give me 5 cases, plz.
+------------------------------------------------
+You need to give me the jsonl format output. For example:
+
+{"prompt": "[ossinsight] Most active contributors in the last 30 days", "completion": "WITH events_last_30_days AS(SELECT actor_id, COUNT(*) AS activity FROM github_events WHERE type IN ('PushEvent','PullRequestEvent','IssuesEvent') AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY actor_id) SELECT gu.login, events_last_30_days.activity AS activity FROM github_users gu JOIN events_last_30_days ON gu.id = events_last_30_days.actor_id ORDER BY activity DESC LIMIT 10"}
+
+Please format it.
+------------------------------------------------
+There isn't a user named "USER", and those questions are too weird. Besides, why you don't use code format to output the jsonl data?
+------------------------------------------------
+Okay. give me 5 more cases. Output needs to format as jsonl. And put it into a code area.
+------------------------------------------------
+------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
 ------------------------------------------------
