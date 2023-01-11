@@ -1,0 +1,122 @@
+------------------------------------------------
+I want to fine-tune the GPT-3 model to generate some SQL for me. I already have some cases:
+{"prompt": "Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
+{"prompt": "All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
+{"prompt": "Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
+{"prompt": "Star history of @carbon-language/carbon-lang", "completion": "SELECT t_month, stars, SUM(stars) OVER ( ORDER BY t_month ASC ) AS cumulative_stars FROM ( SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS t_month, COUNT(DISTINCT actor_login) AS stars FROM github_events AS ge WHERE ge.type = 'WatchEvent' AND ge.repo_id = ( SELECT repo_id FROM github_repos WHERE repo_name = 'carbon-language/carbon-lang' ) GROUP BY t_month ) AS star_counts ORDER BY t_month ASC LIMIT 200"}
+Can you give me more cases? I want the return format to be jsonl.
+------------------------------------------------
+You're wrong, because we don't have this data, please see my examples:
+
+{"prompt": "Popular repos related to ChatGPT", "completion": "SELECT gr.repo_name, gr.stars AS popularity FROM github_repos AS gr WHERE gr.description LIKE '%ChatGPT%' ORDER BY popularity DESC LIMIT 200" }
+{"prompt": "All repos with more than 1000 stars", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.stars > 1000" }
+{"prompt": "Top 5 repos in the TensorFlow organization", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr WHERE gr.owner_is_org = 1 AND gr.owner_login = 'tensorflow' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "Repos with a python language and more than 10 contributors", "completion": "WITH ge_with_contributors AS ( SELECT repo_id, COUNT(DISTINCT actor_id) as contributors FROM github_events ge WHERE ge.type = 'PullRequestEvent' AND action = 'closed' AND pr_merged = 1 GROUP BY repo_id ) SELECT gr.repo_name FROM github_repos AS gr LEFT JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id LEFT JOIN ge_with_contributors gwc ON gwc.repo_id = gr.repo_id WHERE grl.language = 'Python' AND gwc.contributors > 10 LIMIT 10" }
+
+Can you use it to imitate?
+------------------------------------------------
+We don't have the github_repos .forks field. And in the github_repos.language field, we need to use 'JavaScript' instead of 'javascript'. Or you can use the LOWER() function to deal with the github_repos.language field. So the correct answer is:
+
+{"prompt": "All repos created in the last month", "completion": "SELECT gr.repo_name, gr.created_at FROM github_repos AS gr WHERE gr.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)" }
+{"prompt": "Repos with more than 500 forks", "completion": "SELECT gr.repo_name, gr.forks FROM github_repos AS gr WHERE gr.forks > 500" }
+{"prompt": "Top 5 most popular javascript repos ", "completion": "SELECT gr.repo_name, gr.stars FROM github_repos AS gr JOIN github_repo_languages grl ON grl.repo_id = gr.repo_id WHERE grl.language = 'JavaScript' ORDER BY gr.stars DESC LIMIT 5" }
+{"prompt": "Repos where name starts with 'A'", "completion": "SELECT gr.repo_name FROM github_repos AS gr WHERE gr.repo_name LIKE 'A%'"}
+
+Please use it to give me more cases. I'll correct you again. And this is the DDL about github_repos:
+
+-- gharchive_dev.github_repos definition
+
+CREATE TABLE `github_repos` (
+  `repo_id` int(11) NOT NULL,
+  `repo_name` varchar(150) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  `owner_login` varchar(255) NOT NULL,
+  `owner_is_org` tinyint(1) NOT NULL,
+  `description` varchar(512) NOT NULL DEFAULT '',
+  `primary_language` varchar(32) NOT NULL DEFAULT '',
+  `license` varchar(32) NOT NULL DEFAULT '',
+  `size` bigint(20) NOT NULL DEFAULT '0',
+  `stars` int(11) NOT NULL DEFAULT '0',
+  `forks` int(11) NOT NULL DEFAULT '0',
+  `parent_repo_id` int(11) DEFAULT NULL,
+  `is_fork` tinyint(1) NOT NULL DEFAULT '0',
+  `is_archived` tinyint(1) NOT NULL DEFAULT '0',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `latest_released_at` timestamp NULL DEFAULT NULL,
+  `pushed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `last_event_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `refreshed_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`repo_id`) /*T![clustered_index] CLUSTERED */
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+------------------------------------------------
+WOW! You are very smart! This time, all of the things are correct! please give me more cases!
+------------------------------------------------
+Yes, I'm using TiDB, it supports full-text search. Can you give me 10 cases more?
+------------------------------------------------
+TiDB can not use SQL like this:
+
+SELECT gr.repo_name FROM github_repos AS gr WHERE MATCH(gr.description) AGAINST ('machine learning' IN NATURAL LANGUAGE MODE)
+
+It does not support grammar like MATCH...AGAINST. So you need to change it like:
+
+SELECT gr.repo_name FROM github_repos AS gr WHERE gr.description LIKE '%machine learning%'
+
+Please give me 10 cases.
+------------------------------------------------
+we use the big camel format at primary_language, you need to use the LOWER() function to format the field first. So please write like this:
+SELECT gr.repo_name, gr.primary_language, gr.stars FROM github_repos gr WHERE LOWER(gr.primary_language) = 'python' AND gr.stars > 100
+
+And this is the DDL of the github_events table, github_events.repo_id has relatives to github_repos.repo_id:
+
+CREATE TABLE `github_events` (
+  `id` bigint(20) NOT NULL DEFAULT '0',
+  `type` varchar(29) NOT NULL DEFAULT 'Event',
+  `created_at` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `repo_id` bigint(20) NOT NULL DEFAULT '0',
+  `repo_name` varchar(140) NOT NULL DEFAULT '',
+  `actor_id` bigint(20) NOT NULL DEFAULT '0',
+  `actor_login` varchar(40) NOT NULL DEFAULT '',
+  `language` varchar(26) NOT NULL DEFAULT '',
+  `additions` bigint(20) NOT NULL DEFAULT '0',
+  `deletions` bigint(20) NOT NULL DEFAULT '0',
+  `action` varchar(11) NOT NULL DEFAULT '',
+  `number` int(11) NOT NULL DEFAULT '0',
+  `commit_id` varchar(40) NOT NULL DEFAULT '',
+  `comment_id` bigint(20) NOT NULL DEFAULT '0',
+  `org_login` varchar(40) NOT NULL DEFAULT '',
+  `org_id` bigint(20) NOT NULL DEFAULT '0',
+  `state` varchar(6) NOT NULL DEFAULT '',
+  `closed_at` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `comments` int(11) NOT NULL DEFAULT '0',
+  `pr_merged_at` datetime NOT NULL DEFAULT '1970-01-01 00:00:00',
+  `pr_merged` tinyint(1) NOT NULL DEFAULT '0',
+  `pr_changed_files` int(11) NOT NULL DEFAULT '0',
+  `pr_review_comments` int(11) NOT NULL DEFAULT '0',
+  `pr_or_issue_id` bigint(20) NOT NULL DEFAULT '0',
+  `event_day` date NOT NULL,
+  `event_month` date NOT NULL,
+  `event_year` int(11) NOT NULL,
+  `push_size` int(11) NOT NULL DEFAULT '0',
+  `push_distinct_size` int(11) NOT NULL DEFAULT '0',
+  `creator_user_login` varchar(40) NOT NULL DEFAULT '',
+  `creator_user_id` bigint(20) NOT NULL DEFAULT '0',
+  `pr_or_issue_created_at` datetime NOT NULL DEFAULT '1970-01-01 00:00:00'
+)
+
+Please give me 5 cases to join these two tables.
+------------------------------------------------
+correct! 5 more plz.
+------------------------------------------------
+What's wrong? You just give me 4 cases. And the 4th case is incomplete. Please give 5 more.
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
+------------------------------------------------
